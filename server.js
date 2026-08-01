@@ -5,7 +5,7 @@ const mineflayer = require('mineflayer');
 const { pathfinder, Movements, goals } = require('mineflayer-pathfinder');
 const autoEat = require('mineflayer-auto-eat');
 const armorManager = require('mineflayer-armor-manager');
-const { plugin: collectBlock } = require('mineflayer-collectblock');
+const collectBlock = require('mineflayer-collectblock').plugin; // <-- Düzeltilen kısım
 
 const app = express();
 const server = http.createServer(app);
@@ -34,6 +34,7 @@ function startBotInstance(data, socket) {
         version: version
     });
 
+    // Eklentiler güvenli bir şekilde yükleniyor
     bot.loadPlugin(pathfinder);
     bot.loadPlugin(autoEat);
     bot.loadPlugin(armorManager);
@@ -75,12 +76,10 @@ function startBotInstance(data, socket) {
         socket.emit('log', `[${username}] Hata: ${err.message}`);
     });
 
-    // Envanter Güncellemeleri
     bot.on('inventoryUpdate', () => {
         sendPlayerInventory(username, socket);
     });
 
-    // GUI / Sandık Açılması
     bot.on('windowOpen', (window) => {
         let title = "Menü";
         try { title = JSON.parse(window.title).text || "Menü"; } catch(e) {}
@@ -112,7 +111,6 @@ function sendPlayerInventory(username, socket) {
     socket.emit('playerInventoryUpdate', { username, slots });
 }
 
-// Canlı Radar & Harita Döngüsü (Her 1 saniyede bir)
 setInterval(() => {
     if (!activeSocket) return;
     for (const username in activeBots) {
