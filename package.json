@@ -1,7 +1,7 @@
 {
-  "name": "chatcraft-pro-cloud",
+  "name": "chatcraft-pro-exact",
   "version": "1.0.0",
-  "description": "Bulut Tabanlı Çoklu Minecraft Bot Yönetim Paneli",
+  "description": "ChatCraftPro Esintili Bulut Minecraft Bot Paneli",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
