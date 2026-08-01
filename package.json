@@ -1,18 +1,22 @@
 {
-  "name": "chatcraft-pro-exact",
-  "version": "1.0.0",
-  "description": "ChatCraftPro Esintili Bulut Minecraft Bot Paneli",
+  "name": "chatcraft-pro-mobile",
+  "version": "2.6.0",
+  "description": "ChatCraftPro Mobile Web Edition with Prismarine 3D Viewer",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "latest",
-    "mineflayer": "latest",
-    "socket.io": "latest",
-    "mineflayer-pathfinder": "latest",
-    "mineflayer-auto-eat": "latest",
-    "mineflayer-armor-manager": "latest",
-    "mineflayer-collectblock": "latest"
+    "express": "^4.19.2",
+    "mineflayer": "^4.20.0",
+    "mineflayer-armor-manager": "^1.4.0",
+    "mineflayer-auto-eat": "^4.0.0",
+    "mineflayer-collectblock": "^2.3.0",
+    "mineflayer-pathfinder": "^2.4.3",
+    "prismarine-viewer": "^1.27.0",
+    "socket.io": "^4.7.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
