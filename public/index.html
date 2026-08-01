@@ -3,275 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatCraftPro Cloud Panel</title>
+    <title>ChatCraftPro Web Edition</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        body { 
-            background: #0f172a; 
-            color: #f8fafc; 
-            font-family: 'Segoe UI', system-ui, sans-serif; 
-            margin: 0; 
-            padding: 15px; 
-            display: flex; 
-            gap: 15px; 
-            height: 100vh; 
-            box-sizing: border-box; 
-            overflow: hidden;
-        }
-        .panel { 
-            background: rgba(30, 41, 59, 0.7); 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            border-radius: 16px; 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-            width: 340px; 
-            overflow-y: auto;
-            backdrop-filter: blur(12px); 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .console { 
-            flex: 1; 
-            background: #020617; 
-            border-radius: 16px; 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            overflow: hidden;
-        }
-        label { font-size: 12px; color: #94a3b8; font-weight: 600; margin-bottom: -6px; }
-        input, select, button { 
-            background: rgba(15, 23, 42, 0.8); 
-            color: white; 
-            border: 1px solid #334155; 
-            padding: 12px; 
-            border-radius: 10px; 
-            font-size: 13px; 
-            outline: none; 
-        }
-        input:focus, select:focus { border-color: #6366f1; }
-        button { background: #6366f1; cursor: pointer; font-weight: bold; border: none; margin-top: 5px; }
-        button:hover { background: #4f46e5; }
-        button.danger { background: #ef4444; }
-        button.danger:hover { background: #dc2626; }
-        .logs { 
-            flex: 1; 
-            overflow-y: auto; 
-            font-family: 'Courier New', monospace; 
-            font-size: 13px;
-            color: #10b981; 
-            margin-bottom: 15px; 
-            line-height: 1.4;
-        }
-        .chat-input { display: flex; gap: 10px; }
-        .chat-input input { flex: 1; }
-        
-        /* Minecraft GUI ve Envanter Stilleri */
-        .mc-gui-container, .player-inventory-container, .map-container {
-            display: none; 
-            background: #c6c6c6; 
-            border: 4px solid #000; 
-            border-radius: 4px; 
-            padding: 15px; 
-            margin-top: 15px;
-            width: fit-content;
-        }
-        .mc-gui-title, .inv-section-title {
-            font-weight: bold; color: #3f3f3f; font-family: 'Courier New', monospace; font-size: 12px; margin-bottom: 8px;
-        }
-        .mc-gui-grid, .player-inv-grid {
-            display: grid; grid-template-columns: repeat(9, 36px); gap: 2px;
-        }
-        .mc-slot-real {
-            width: 36px; height: 36px; background: #8b8b8b;
-            border-top: 2px solid #373737; border-left: 2px solid #373737;
-            border-bottom: 2px solid #fff; border-right: 2px solid #fff;
-            display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer;
-        }
-        .mc-slot-real img { width: 32px; height: 32px; image-rendering: pixelated; }
-        .mc-item-count { position: absolute; bottom: -2px; right: 2px; color: white; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 0 #000; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: #121216; color: #e1e1e6; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* D-Pad Hareket Paneli */
-        .movement-panel { background: rgba(30, 41, 59, 0.7); border-radius: 12px; padding: 12px; margin-top: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        .dpad-grid { display: grid; grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(3, 44px); gap: 4px; }
-        .dpad-btn { background: #1e293b; color: white; border: 1px solid #334155; border-radius: 8px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        /* Üst Durum Çubuğu (ChatCraftPro Header) */
+        .ccp-header { background: #1a1a24; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2a3c; font-size: 13px; }
+        .ccp-header select, .ccp-header input { background: #242433; color: #fff; border: 1px solid #3a3a52; padding: 5px 10px; border-radius: 6px; }
+
+        /* Ana İçerik Ekranları */
+        .ccp-content { flex: 1; position: relative; overflow: hidden; display: flex; }
+        .tab-pane { position: absolute; inset: 0; display: none; flex-direction: column; background: #121216; padding: 10px; gap: 10px; overflow-y: auto; }
+        .tab-pane.active { display: flex; }
+
+        /* Alt Sekme Çubuğu (ChatCraftPro Bottom Bar) */
+        .ccp-nav { height: 60px; background: #1a1a24; border-top: 1px solid #2a2a3c; display: flex; justify-content: space-around; align-items: center; }
+        .nav-item { background: none; border: none; color: #8e8e99; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; }
+        .nav-item.active { color: #6366f1; font-weight: bold; }
+        .nav-item span.icon { font-size: 18px; }
+
+        /* Konsol & Sohbet */
+        .logs-box { flex: 1; background: #0c0c10; border: 1px solid #2a2a3c; border-radius: 8px; padding: 10px; font-family: monospace; font-size: 12px; color: #34d399; overflow-y: auto; line-height: 1.4; }
+        .chat-box-row { display: flex; gap: 8px; }
+        .chat-box-row input { flex: 1; background: #1a1a24; border: 1px solid #3a3a52; color: #fff; padding: 10px; border-radius: 8px; }
+        .chat-box-row button { background: #6366f1; color: #fff; border: none; padding: 0 15px; border-radius: 8px; font-weight: bold; }
+
+        /* Oyuncu Listesi & NPC */
+        .list-item { background: #1a1a24; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border: 1px solid #2a2a3c; font-size: 13px; }
+
+        /* Envanter */
+        .inventory-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 3px; background: #1a1a24; padding: 10px; border-radius: 8px; justify-content: center; }
+        .mc-slot { aspect-ratio: 1; background: #2a2a3c; border: 1px solid #3a3a52; border-radius: 4px; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
+        .mc-slot img { width: 80%; height: 80%; image-rendering: pixelated; }
+        .slot-count { position: absolute; bottom: 1px; right: 3px; font-size: 10px; font-weight: bold; color: #fff; text-shadow: 1px 1px #000; }
+
+        /* Kontroller & D-Pad */
+        .control-group { background: #1a1a24; padding: 12px; border-radius: 8px; border: 1px solid #2a2a3c; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+        .dpad { display: grid; grid-template-columns: repeat(3, 48px); grid-template-rows: repeat(3, 48px); gap: 4px; }
+        .dpad-btn { background: #2a2a3c; color: #fff; border: 1px solid #3a3a52; border-radius: 6px; font-size: 16px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .dpad-btn:active { background: #6366f1; }
-        .action-buttons { display: flex; gap: 6px; width: 100%; }
-        .action-btn { flex: 1; background: #1e293b; border: 1px solid #334155; padding: 8px; border-radius: 6px; color: white; font-size: 11px; cursor: pointer; }
-        .action-btn:active { background: #059669; }
+        .action-row { display: flex; gap: 6px; width: 100%; }
+        .action-row button { flex: 1; background: #2a2a3c; color: #fff; border: 1px solid #3a3a52; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+        .action-row button:active { background: #10b981; }
 
-        #radarCanvas { background: #020617; border-radius: 4px; border: 2px solid #373737; display: block; }
-        .npc-list-container { max-height: 120px; overflow-y: auto; margin-top: 10px; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 8px; }
-        .npc-item { display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 6px; border-radius: 6px; margin-bottom: 4px; font-size: 11px; }
+        /* Radar Canvas */
+        #radarCanvas { background: #0c0c10; border-radius: 8px; border: 1px solid #2a2a3c; display: block; margin: 0 auto; }
+        
+        .panel-section-title { font-size: 11px; text-transform: uppercase; color: #8e8e99; font-weight: bold; margin-bottom: 4px; }
     </style>
 </head>
 <body>
 
-    <!-- SOL KONTROL PANELİ -->
-    <div class="panel">
-        <h2 style="margin:0; font-size: 18px; text-align: center;">⚡ ChatCraftPro</h2>
-        
-        <label>Sunucu IP</label>
-        <input type="text" id="host" placeholder="play.sunucu.com">
-        
-        <label>Port</label>
-        <input type="number" id="port" value="25565">
-        
-        <label>Bot Adı</label>
-        <input type="text" id="username" placeholder="Bot1">
-        
-        <label>Sürüm</label>
-        <select id="version">
-            <option value="1.21.11">1.21.11</option>
-            <option value="1.21">1.21</option>
-            <option value="1.20.4">1.20.4</option>
-            <option value="false">Otomatik</option>
-        </select>
-        
-        <button onclick="startBot()">➕ Bot Ekle / Başlat</button>
-
-        <label style="margin-top:5px;">Aktif Botlar:</label>
-        <select id="activeBotSelect" onchange="changeSelectedBot()">
-            <option value="">Bot Yok</option>
-        </select>
-        <button class="danger" onclick="stopSelectedBot()">🛑 Seçili Botu Durdur</button>
-
-        <hr style="border-color: rgba(255,255,255,0.1); width:100%; margin: 5px 0;">
-
-        <!-- HIZLI KOMUT MAKROLARI -->
-        <label>Hızlı Komut Makroları</label>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-            <button onclick="sendMacro('/spawn')" style="margin:0; background:#334155;">/spawn</button>
-            <button onclick="sendMacro('/home')" style="margin:0; background:#334155;">/home</button>
-            <button onclick="sendMacro('/kit')" style="margin:0; background:#334155;">/kit</button>
-            <button onclick="sendMacro('/warp')" style="margin:0; background:#334155;">/warp</button>
+    <!-- ÜST BAĞLANTI ÇUBUĞU -->
+    <div class="ccp-header">
+        <div style="display: flex; gap: 6px; align-items: center;">
+            <input type="text" id="host" placeholder="IP Adresi" style="width: 110px;">
+            <input type="number" id="port" value="25565" style="width: 65px;">
+            <input type="text" id="username" placeholder="BotAdı" style="width: 80px;">
+            <select id="version" style="width: 75px;">
+                <option value="1.21.11">1.21.11</option>
+                <option value="false">Auto</option>
+            </select>
         </div>
-
-        <!-- ÖZELLİK BUTONLARI -->
-        <button onclick="togglePlayerInventory()" style="background: #3b82f6;">🎒 Bot Envanteri</button>
-        <button onclick="toggleMap()" style="background: #10b981;">🗺️ Canlı Harita & NPC</button>
-
-        <!-- KOORDİNAT / PATHFINDER -->
-        <div class="movement-panel" style="margin-top:5px;">
-            <div class="inv-section-title" style="color:#94a3b8;">🎯 YOL BULMA (PATHFINDER)</div>
-            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:4px; width:100%;">
-                <input type="number" id="targetX" placeholder="X" style="padding:6px; text-align:center;">
-                <input type="number" id="targetY" placeholder="Y" style="padding:6px; text-align:center;">
-                <input type="number" id="targetZ" placeholder="Z" style="padding:6px; text-align:center;">
-            </div>
-            <div style="display:flex; gap:6px; width:100%;">
-                <button onclick="goToCoords()" style="background:#10b981; flex:2; margin:0;">Yürü 🧭</button>
-                <button onclick="stopWalk()" class="danger" style="flex:1; margin:0;">Dur 🛑</button>
-            </div>
-        </div>
-
-        <!-- OTOMATİK BLOK KAZMA -->
-        <div class="movement-panel" style="margin-top:5px;">
-            <div class="inv-section-title" style="color:#94a3b8;">⛏️ BLOK KAZ & TOPLA</div>
-            <div style="display:flex; gap:6px; width:100%;">
-                <input type="text" id="blockNameInput" placeholder="örn: stone, oak_log" style="flex:2; padding:6px; margin:0;">
-                <button onclick="startCollect()" style="background:#f59e0b; flex:1; margin:0;">Kaz 🪓</button>
-            </div>
-        </div>
-
-        <!-- HAREKET D-PAD -->
-        <div class="movement-panel">
-            <div class="inv-section-title" style="color:#94a3b8;">OYUN İÇİ HAREKET</div>
-            <div class="dpad-grid">
-                <div></div>
-                <button class="dpad-btn" ontouchstart="sendControl('forward', true)" ontouchend="sendControl('forward', false)" onmousedown="sendControl('forward', true)" onmouseup="sendControl('forward', false)">⬆️</button>
-                <div></div>
-                <button class="dpad-btn" ontouchstart="sendControl('left', true)" ontouchend="sendControl('left', false)" onmousedown="sendControl('left', true)" onmouseup="sendControl('left', false)">⬅️</button>
-                <div class="dpad-btn" style="background:transparent; border:none;">🎮</div>
-                <button class="dpad-btn" ontouchstart="sendControl('right', true)" ontouchend="sendControl('right', false)" onmousedown="sendControl('right', true)" onmouseup="sendControl('right', false)">➡️</button>
-                <div></div>
-                <button class="dpad-btn" ontouchstart="sendControl('back', true)" ontouchend="sendControl('back', false)" onmousedown="sendControl('back', true)" onmouseup="sendControl('back', false)">⬇️</button>
-                <div></div>
-            </div>
-            <div class="action-buttons">
-                <button class="action-btn" ontouchstart="sendControl('jump', true)" ontouchend="sendControl('jump', false)" onmousedown="sendControl('jump', true)" onmouseup="sendControl('jump', false)">Zıpla</button>
-                <button class="action-btn" ontouchstart="sendControl('sneak', true)" ontouchend="sendControl('sneak', false)" onmousedown="sendControl('sneak', true)" onmouseup="sendControl('sneak', false)">Eğil</button>
-                <button class="action-btn" ontouchstart="sendControl('sprint', true)" ontouchend="sendControl('sprint', false)" onmousedown="sendControl('sprint', true)" onmouseup="sendControl('sprint', false)">Koş</button>
-            </div>
+        <div style="display: flex; gap: 5px;">
+            <button onclick="startBot()" style="background:#10b981; color:#fff; border:none; padding:5px 10px; border-radius:6px; font-weight:bold;">Bağlan</button>
+            <button onclick="stopBot()" style="background:#ef4444; color:#fff; border:none; padding:5px 10px; border-radius:6px; font-weight:bold;">Kopar</button>
         </div>
     </div>
 
-    <!-- SAĞ EKRAN (KONSOL & PENCERELER) -->
-    <div class="console">
-        <div class="logs" id="logs">
-            <div style="color: #6366f1;">[Sistem] Bulut konsolu aktif. Bağlantı bekleniyor...</div>
-        </div>
-
-        <div class="chat-input">
-            <input type="text" id="chatMsg" placeholder="Sohbet mesajı veya komut yaz..." onkeypress="handleEnter(event)">
-            <button onclick="sendChat()" style="margin:0;">Gönder</button>
-        </div>
-
-        <!-- Orijinal Minecraft GUI / Sandık Penceresi -->
-        <div class="mc-gui-container" id="mcGuiContainer">
-            <div class="mc-gui-title" id="mcGuiTitle">Menü</div>
-            <div class="mc-gui-grid" id="mcGuiGrid"></div>
-        </div>
-
-        <!-- Bot Envanteri Penceresi -->
-        <div class="player-inventory-container" id="playerInvContainer">
-            <div class="inv-section-title">BOTUN ENVANTERİ</div>
-            <div class="player-inv-grid" id="playerInvGrid"></div>
-            <div style="display:flex; gap:6px; margin-top:8px;">
-                <button onclick="requestRefreshInv()" style="background:#3b82f6; flex:1; margin:0; padding:6px;">Yenile</button>
+    <!-- ORTA İÇERİK SEKME ALANI -->
+    <div class="ccp-content">
+        
+        <!-- 1. KONSOL / SOHBET -->
+        <div id="tab-console" class="tab-pane active">
+            <div class="logs-box" id="logs">
+                <div>[Sistem] ChatCraftPro arayüzü yüklendi. Bot bekleniyor...</div>
+            </div>
+            <div class="chat-box-row">
+                <input type="text" id="chatMsg" placeholder="Mesaj veya komut yaz (/spawn, /home...)" onkeypress="if(event.key==='Enter')sendChat()">
+                <button onclick="sendChat()">Gönder</button>
             </div>
         </div>
 
-        <!-- Canlı Radar ve NPC Listesi -->
-        <div class="map-container" id="mapContainer">
-            <div class="inv-section-title">CANLI RADAR (64 BLOK)</div>
-            <canvas id="radarCanvas" width="260" height="200"></canvas>
-            <div class="npc-list-container">
-                <div class="inv-section-title" style="margin-bottom:4px;">YAKINDAKİ NPC / OYUNCULAR</div>
+        <!-- 2. OYUNCU LİSTESİ -->
+        <div id="tab-players" class="tab-pane">
+            <div class="panel-section-title">Çevrimiçi Oyuncular</div>
+            <div id="playersListContainer" style="flex:1; overflow-y:auto;">
+                <div style="text-align:center; color:#666; margin-top:20px;">Aktif oyuncu yok</div>
+            </div>
+        </div>
+
+        <!-- 3. ENVANTER & SANDIK -->
+        <div id="tab-inventory" class="tab-pane">
+            <div class="panel-section-title">Bot Envanteri</div>
+            <div class="inventory-grid" id="playerInvGrid"></div>
+            
+            <div id="mcGuiContainer" style="display:none; margin-top:10px;">
+                <div class="panel-section-title" id="mcGuiTitle">Açık Sandık / Menü</div>
+                <div class="inventory-grid" id="mcGuiGrid"></div>
+            </div>
+            <button onclick="requestRefreshInv()" style="background:#3b82f6; color:#fff; border:none; padding:8px; border-radius:8px; margin-top:10px; font-weight:bold;">Envanteri Yenile</button>
+        </div>
+
+        <!-- 4. RADAR & HARİTA -->
+        <div id="tab-map" class="tab-pane">
+            <div class="panel-section-title">Canlı Çevre Radarı</div>
+            <canvas id="radarCanvas" width="280" height="200"></canvas>
+            <div style="flex:1; overflow-y:auto; margin-top:10px;">
+                <div class="panel-section-title">Yakındaki Varlıklar / NPC'ler</div>
                 <div id="npcList"></div>
             </div>
         </div>
+
+        <!-- 5. KONTROLLER & PATHFINDER -->
+        <div id="tab-controls" class="tab-pane">
+            <div class="control-group">
+                <div class="panel-section-title">Yol Bulma (Pathfinder)</div>
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; width:100%;">
+                    <input type="number" id="targetX" placeholder="X" style="background:#1a1a24; border:1px solid #3a3a52; color:#fff; padding:6px; border-radius:6px; text-align:center;">
+                    <input type="number" id="targetY" placeholder="Y" style="background:#1a1a24; border:1px solid #3a3a52; color:#fff; padding:6px; border-radius:6px; text-align:center;">
+                    <input type="number" id="targetZ" placeholder="Z" style="background:#1a1a24; border:1px solid #3a3a52; color:#fff; padding:6px; border-radius:6px; text-align:center;">
+                </div>
+                <div style="display:flex; gap:6px; width:100%;">
+                    <button onclick="goToCoords()" style="background:#10b981; color:#fff; border:none; padding:8px; border-radius:6px; flex:2; font-weight:bold;">Oraya Yürü 🧭</button>
+                    <button onclick="stopWalk()" style="background:#ef4444; color:#fff; border:none; padding:8px; border-radius:6px; flex:1; font-weight:bold;">Dur 🛑</button>
+                </div>
+            </div>
+
+            <div class="control-group" style="align-items: center;">
+                <div class="panel-section-title">Hareket D-Pad</div>
+                <div class="dpad">
+                    <div></div>
+                    <button class="dpad-btn" ontouchstart="sendControl('forward', true)" ontouchend="sendControl('forward', false)" onmousedown="sendControl('forward', true)" onmouseup="sendControl('forward', false)">⬆️</button>
+                    <div></div>
+                    <button class="dpad-btn" ontouchstart="sendControl('left', true)" ontouchend="sendControl('left', false)" onmousedown="sendControl('left', true)" onmouseup="sendControl('left', false)">⬅️</button>
+                    <div class="dpad-btn" style="background:none; border:none;">🎮</div>
+                    <button class="dpad-btn" ontouchstart="sendControl('right', true)" ontouchend="sendControl('right', false)" onmousedown="sendControl('right', true)" onmouseup="sendControl('right', false)">➡️</button>
+                    <div></div>
+                    <button class="dpad-btn" ontouchstart="sendControl('back', true)" ontouchend="sendControl('back', false)" onmousedown="sendControl('back', true)" onmouseup="sendControl('back', false)">⬇️</button>
+                    <div></div>
+                </div>
+                <div class="action-row">
+                    <button ontouchstart="sendControl('jump', true)" ontouchend="sendControl('jump', false)" onmousedown="sendControl('jump', true)" onmouseup="sendControl('jump', false)">Zıpla</button>
+                    <button ontouchstart="sendControl('sneak', true)" ontouchend="sendControl('sneak', false)" onmousedown="sendControl('sneak', true)" onmouseup="sendControl('sneak', false)">Eğil</button>
+                    <button ontouchstart="sendControl('sprint', true)" ontouchend="sendControl('sprint', false)" onmousedown="sendControl('sprint', true)" onmouseup="sendControl('sprint', false)">Koş</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ALT SEKME MENÜSÜ (ChatCraftPro Navigation) -->
+    <div class="ccp-nav">
+        <button class="nav-item active" onclick="switchTab('console', this)"><span class="icon">💬</span>Sohbet</button>
+        <button class="nav-item" onclick="switchTab('players', this)"><span class="icon">👥</span>Oyuncular</button>
+        <button class="nav-item" onclick="switchTab('inventory', this)"><span class="icon">🎒</span>Envanter</button>
+        <button class="nav-item" onclick="switchTab('map', this)"><span class="icon">🗺️</span>Harita</button>
+        <button class="nav-item" onclick="switchTab('controls', this)"><span class="icon">🎮</span>Kontrol</button>
     </div>
 
     <script>
         const socket = io();
-        const logs = document.getElementById('logs');
-        let selectedBot = "";
+        let currentBot = "";
 
-        socket.on('log', (msg) => {
-            logs.innerHTML += `<div>[Log] ${msg}</div>`;
-            logs.scrollTop = logs.scrollHeight;
-        });
-
-        socket.on('chat', (msg) => {
-            logs.innerHTML += `<div style="color:#e2e8f0;">${msg}</div>`;
-            logs.scrollTop = logs.scrollHeight;
-        });
-
-        socket.on('botListUpdate', (bots) => {
-            const select = document.getElementById('activeBotSelect');
-            select.innerHTML = '';
-            if (bots.length === 0) {
-                select.innerHTML = '<option value="">Bot Yok</option>';
-                selectedBot = "";
-                return;
-            }
-            bots.forEach(b => {
-                const opt = document.createElement('option');
-                opt.value = b.username;
-                opt.innerText = `${b.username} (${b.host})`;
-                select.appendChild(opt);
-            });
-            if (!selectedBot || !bots.some(b => b.username === selectedBot)) {
-                selectedBot = bots[0].username;
-            }
-            select.value = selectedBot;
-        });
-
-        function changeSelectedBot() {
-            selectedBot = document.getElementById('activeBotSelect').value;
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            if(el) el.classList.add('active');
         }
 
         function startBot() {
@@ -282,158 +183,84 @@
                 version: document.getElementById('version').value
             };
             if(!data.host || !data.username) return alert("IP ve Bot adı zorunludur!");
+            currentBot = data.username;
             socket.emit('startBot', data);
-            selectedBot = data.username;
         }
 
-        function stopSelectedBot() {
-            if(!selectedBot) return alert("Bot seçilmedi!");
-            socket.emit('stopBot', selectedBot);
+        function stopBot() {
+            if(currentBot) socket.emit('stopBot', currentBot);
         }
 
         function sendChat() {
             const msg = document.getElementById('chatMsg').value;
-            if(msg && selectedBot) {
-                socket.emit('sendChat', { username: selectedBot, message: msg });
+            if(msg && currentBot) {
+                socket.emit('sendChat', { username: currentBot, message: msg });
                 document.getElementById('chatMsg').value = '';
             }
         }
 
-        function sendMacro(cmd) {
-            if(!selectedBot) return alert("Bot seçilmedi!");
-            socket.emit('sendChat', { username: selectedBot, message: cmd });
-        }
-
-        function handleEnter(e) { if(e.key === 'Enter') sendChat(); }
-
         function sendControl(action, state) {
-            if(!selectedBot) return;
-            socket.emit('botControl', { username: selectedBot, action, state });
+            if(currentBot) socket.emit('botControl', { username: currentBot, action, state });
         }
 
         function goToCoords() {
-            if(!selectedBot) return alert("Bot seçilmedi!");
+            if(!currentBot) return;
             const x = document.getElementById('targetX').value;
             const y = document.getElementById('targetY').value;
             const z = document.getElementById('targetZ').value;
-            if(!x || !z) return alert("X ve Z girilmelidir!");
-            socket.emit('goToCoordinates', { username: selectedBot, x, y: y || 64, z });
+            if(x && z) socket.emit('goToCoordinates', { username: currentBot, x, y: y || 64, z });
         }
 
         function stopWalk() {
-            if(selectedBot) socket.emit('stopWalking', selectedBot);
-        }
-
-        function startCollect() {
-            if(!selectedBot) return alert("Bot seçilmedi!");
-            const blockName = document.getElementById('blockNameInput').value.trim().toLowerCase();
-            if(!blockName) return alert("Blok ismi girin!");
-            socket.emit('collectBlock', { username: selectedBot, blockName });
-        }
-
-        // GUI / Sandık Rendering
-        const mcGuiContainer = document.getElementById('mcGuiContainer');
-        const mcGuiTitle = document.getElementById('mcGuiTitle');
-        const mcGuiGrid = document.getElementById('mcGuiGrid');
-
-        socket.on('mcGuiOpened', (data) => {
-            if(data.username !== selectedBot) return;
-            mcGuiContainer.style.display = 'block';
-            mcGuiTitle.innerText = `${data.username} - ${data.title}`;
-            mcGuiGrid.innerHTML = '';
-            const textureBaseUrl = "https://raw.githubusercontent.com/PrismarineJS/minecraft-assets/master/data/1.20.4/items/";
-
-            data.items.forEach((item) => {
-                const slotDiv = document.createElement('div');
-                slotDiv.className = 'mc-slot-real';
-                if(item) {
-                    const img = document.createElement('img');
-                    img.src = `${textureBaseUrl}${item.name}.png`;
-                    slotDiv.appendChild(img);
-                    if(item.count > 1) {
-                        const countSpan = document.createElement('span');
-                        countSpan.className = 'mc-item-count';
-                        countSpan.innerText = item.count;
-                        slotDiv.appendChild(countSpan);
-                    }
-                    slotDiv.onclick = () => socket.emit('clickMcItem', { username: selectedBot, slotId: item.slot });
-                }
-                mcGuiGrid.appendChild(slotDiv);
-            });
-        });
-
-        // Envanter Penceresi
-        const playerInvContainer = document.getElementById('playerInvContainer');
-        const playerInvGrid = document.getElementById('playerInvGrid');
-
-        function togglePlayerInventory() {
-            if(playerInvContainer.style.display === 'block') {
-                playerInvContainer.style.display = 'none';
-            } else {
-                playerInvContainer.style.display = 'block';
-                requestRefreshInv();
-            }
+            if(currentBot) socket.emit('stopWalking', currentBot);
         }
 
         function requestRefreshInv() {
-            if(selectedBot) socket.emit('requestInventory', selectedBot);
+            if(currentBot) socket.emit('requestInventory', currentBot);
         }
 
-        socket.on('playerInventoryUpdate', (data) => {
-            if(data.username !== selectedBot) return;
-            playerInvGrid.innerHTML = '';
-            const textureBaseUrl = "https://raw.githubusercontent.com/PrismarineJS/minecraft-assets/master/data/1.20.4/items/";
-
-            data.slots.forEach((item, index) => {
-                const slotDiv = document.createElement('div');
-                slotDiv.className = 'mc-slot-real';
-                if(item) {
-                    const img = document.createElement('img');
-                    img.src = `${textureBaseUrl}${item.name}.png`;
-                    slotDiv.appendChild(img);
-                    if(item.count > 1) {
-                        const countSpan = document.createElement('span');
-                        countSpan.className = 'mc-item-count';
-                        countSpan.innerText = item.count;
-                        slotDiv.appendChild(countSpan);
-                    }
-                }
-                slotDiv.onclick = () => socket.emit('quickMoveItem', { username: selectedBot, slotId: index });
-                slotDiv.oncontextmenu = (e) => { e.preventDefault(); socket.emit('tossItem', { username: selectedBot, slotId: index }); };
-                playerInvGrid.appendChild(slotDiv);
-            });
+        socket.on('log', (msg) => {
+            const l = document.getElementById('logs');
+            l.innerHTML += `<div>${msg}</div>`;
+            l.scrollTop = l.scrollHeight;
         });
 
-        // Canlı Radar & Harita
-        const mapContainer = document.getElementById('mapContainer');
-        const canvas = document.getElementById('radarCanvas');
-        const ctx = canvas.getContext('2d');
-        const npcList = document.getElementById('npcList');
+        socket.on('chat', (msg) => {
+            const l = document.getElementById('logs');
+            l.innerHTML += `<div style="color:#fff;">${msg}</div>`;
+            l.scrollTop = l.scrollHeight;
+        });
 
-        function toggleMap() {
-            mapContainer.style.display = mapContainer.style.display === 'block' ? 'none' : 'block';
-        }
+        socket.on('dataUpdate', (data) => {
+            if(data.username !== currentBot) return;
 
-        socket.on('mapUpdate', (data) => {
-            if(data.username !== selectedBot || mapContainer.style.display !== 'block') return;
+            // Oyuncu Listesini Güncelle
+            const pCont = document.getElementById('playersListContainer');
+            pCont.innerHTML = '';
+            if(data.players && data.players.length > 0) {
+                data.players.forEach(p => {
+                    pCont.innerHTML += `<div class="list-item"><span>🟢 ${p.username}</span></div>`;
+                });
+            } else {
+                pCont.innerHTML = '<div style="text-align:center; color:#666; margin-top:20px;">Çevrimiçi oyuncu yok</div>';
+            }
+
+            // Radar Çizimi
+            const canvas = document.getElementById('radarCanvas');
+            const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
-            const scale = 2;
-
-            ctx.strokeStyle = '#1e293b';
-            ctx.beginPath();
-            ctx.moveTo(cx, 0); ctx.lineTo(cx, canvas.height);
-            ctx.moveTo(0, cy); ctx.lineTo(canvas.width, cy);
-            ctx.stroke();
 
             ctx.fillStyle = '#6366f1';
             ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill();
 
+            const npcList = document.getElementById('npcList');
             npcList.innerHTML = '';
+
             data.entities.forEach(ent => {
-                const rx = (ent.x - data.botPos.x) * scale;
-                const rz = (ent.z - data.botPos.z) * scale;
+                const rx = (ent.x - data.botPos.x) * 2;
+                const rz = (ent.z - data.botPos.z) * 2;
                 const dx = cx + rx;
                 const dy = cy + rz;
 
@@ -443,24 +270,59 @@
                 }
 
                 if(ent.type === 'player' || ent.type === 'mob') {
-                    const div = document.createElement('div');
-                    div.className = 'npc-item';
-                    div.innerHTML = `
-                        <span>${ent.name || 'Varlık'}</span>
-                        <div>
-                            <button onclick="interactEntity(${ent.id}, 'rightclick')" style="padding:2px 6px; font-size:10px;">Menü</button>
-                            <button onclick="interactEntity(${ent.id}, 'leftclick')" class="danger" style="padding:2px 6px; font-size:10px;">Vur</button>
+                    npcList.innerHTML += `
+                        <div class="list-item">
+                            <span>${ent.name || 'Varlık'}</span>
+                            <div style="display:flex; gap:5px;">
+                                <button onclick="interactEntity(${ent.id}, 'rightclick')" style="background:#3b82f6; border:none; color:#fff; padding:3px 8px; border-radius:4px; font-size:10px;">Menü</button>
+                                <button onclick="interactEntity(${ent.id}, 'leftclick')" style="background:#ef4444; border:none; color:#fff; padding:3px 8px; border-radius:4px; font-size:10px;">Vur</button>
+                            </div>
                         </div>
                     `;
-                    npcList.appendChild(div);
                 }
             });
         });
 
-        window.interactEntity = function(entityId, action) {
-            if(!selectedBot) return;
-            socket.emit('interactEntity', { username: selectedBot, entityId, action });
+        socket.on('playerInventoryUpdate', (data) => {
+            if(data.username !== currentBot) return;
+            const grid = document.getElementById('playerInvGrid');
+            grid.innerHTML = '';
+            const textureBaseUrl = "https://raw.githubusercontent.com/PrismarineJS/minecraft-assets/master/data/1.20.4/items/";
+
+            data.slots.forEach((item, index) => {
+                const slot = document.createElement('div');
+                slot.className = 'mc-slot';
+                if(item) {
+                    slot.innerHTML = `<img src="${textureBaseUrl}${item.name}.png"><span class="slot-count">${item.count > 1 ? item.count : ''}</span>`;
+                }
+                slot.onclick = () => socket.emit('quickMoveItem', { username: currentBot, slotId: index });
+                slot.oncontextmenu = (e) => { e.preventDefault(); socket.emit('tossItem', { username: currentBot, slotId: index }); };
+                grid.appendChild(slot);
+            });
+        });
+
+        socket.on('mcGuiOpened', (data) => {
+            if(data.username !== currentBot) return;
+            document.getElementById('mcGuiContainer').style.display = 'block';
+            document.getElementById('mcGuiTitle').innerText = data.title;
+            const grid = document.getElementById('mcGuiGrid');
+            grid.innerHTML = '';
+            const textureBaseUrl = "https://raw.githubusercontent.com/PrismarineJS/minecraft-assets/master/data/1.20.4/items/";
+
+            data.items.forEach((item) => {
+                const slot = document.createElement('div');
+                slot.className = 'mc-slot';
+                if(item) {
+                    slot.innerHTML = `<img src="${textureBaseUrl}${item.name}.png"><span class="slot-count">${item.count > 1 ? item.count : ''}</span>`;
+                    slot.onclick = () => socket.emit('clickMcItem', { username: currentBot, slotId: item.slot });
+                }
+                grid.appendChild(slot);
+            });
+        });
+
+        window.interactEntity = function(id, action) {
+            if(currentBot) socket.emit('interactEntity', { username: currentBot, entityId: id, action });
         };
     </script>
 </body>
-                  </html>
+</html>
