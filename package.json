@@ -7,14 +7,14 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "mineflayer": "^4.20.0",
-    "mineflayer-armor-manager": "^1.4.0",
-    "mineflayer-auto-eat": "^4.0.0",
-    "mineflayer-collectblock": "^2.3.0",
-    "mineflayer-pathfinder": "^2.4.3",
-    "prismarine-viewer": "^1.27.0",
-    "socket.io": "^4.7.5"
+    "express": "latest",
+    "mineflayer": "latest",
+    "mineflayer-armor-manager": "latest",
+    "mineflayer-auto-eat": "latest",
+    "mineflayer-collectblock": "latest",
+    "mineflayer-pathfinder": "latest",
+    "prismarine-viewer": "latest",
+    "socket.io": "latest"
   },
   "engines": {
     "node": ">=18.0.0"
