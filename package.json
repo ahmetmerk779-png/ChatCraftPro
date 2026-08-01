@@ -1,0 +1,18 @@
+{
+  "name": "chatcraft-pro-cloud",
+  "version": "1.0.0",
+  "description": "Bulut Tabanlı Çoklu Minecraft Bot Yönetim Paneli",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mineflayer": "^4.20.1",
+    "socket.io": "^4.7.2",
+    "mineflayer-pathfinder": "^2.4.2",
+    "mineflayer-auto-eat": "^3.1.0",
+    "mineflayer-armor-manager": "^1.4.2",
+    "mineflayer-collectblock": "^4.0.0"
+  }
+}
