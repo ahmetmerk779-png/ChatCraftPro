@@ -5,7 +5,10 @@ const mineflayer = require('mineflayer');
 const { pathfinder, Movements, goals } = require('mineflayer-pathfinder');
 const autoEat = require('mineflayer-auto-eat');
 const armorManager = require('mineflayer-armor-manager');
-const collectBlock = require('mineflayer-collectblock').plugin; // <-- Düzeltilen kısım
+
+// Blok toplama paketini güvenli şekilde içeri aktarıyoruz
+const collectBlockModule = require('mineflayer-collectblock');
+const collectBlock = collectBlockModule.plugin || collectBlockModule;
 
 const app = express();
 const server = http.createServer(app);
@@ -15,6 +18,21 @@ app.use(express.static('public'));
 
 const activeBots = {};
 let activeSocket = null;
+
+// Eklentilerin çökme yaratmasını önleyen güvenli yükleme fonksiyonu
+function safeLoad(bot, plugin, name, socket) {
+    try {
+        if (typeof plugin === 'function') {
+            bot.loadPlugin(plugin);
+        } else if (plugin && typeof plugin.plugin === 'function') {
+            bot.loadPlugin(plugin.plugin);
+        } else {
+            console.log(`[Uyarı] ${name} eklentisi geçerli bir fonksiyon değil, atlandı.`);
+        }
+    } catch (err) {
+        if (socket) socket.emit('log', `[Eklenti Uyarısı] ${name} yüklenemedi: ${err.message}`);
+    }
+}
 
 function startBotInstance(data, socket) {
     const { host, port, username, version } = data;
@@ -31,14 +49,14 @@ function startBotInstance(data, socket) {
         host: host,
         port: parseInt(port),
         username: username,
-        version: version
+        version: version === "false" ? false : version
     });
 
-    // Eklentiler güvenli bir şekilde yükleniyor
-    bot.loadPlugin(pathfinder);
-    bot.loadPlugin(autoEat);
-    bot.loadPlugin(armorManager);
-    bot.loadPlugin(collectBlock);
+    // Eklentileri güvenle yüklüyoruz
+    safeLoad(bot, pathfinder, 'pathfinder', socket);
+    safeLoad(bot, autoEat, 'autoEat', socket);
+    safeLoad(bot, armorManager, 'armorManager', socket);
+    safeLoad(bot, collectBlock, 'collectBlock', socket);
 
     activeBots[username] = {
         bot: bot,
@@ -49,7 +67,7 @@ function startBotInstance(data, socket) {
 
     bot.on('spawn', () => {
         socket.emit('log', `[${username}] Dünyaya başarıyla giriş yaptı!`);
-        bot.autoEat.enable();
+        if (bot.autoEat) bot.autoEat.enable();
         activeBots[username].isManualStop = false;
         updateBotList(socket);
     });
