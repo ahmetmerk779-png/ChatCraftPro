@@ -17,7 +17,12 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static('public'));
+// index.html ve statik dosyaları doğrudan ana dizinden sunuyoruz
+app.use(express.static(__dirname));
+
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+});
 
 const activeBots = {};
 let activeSocket = null;
